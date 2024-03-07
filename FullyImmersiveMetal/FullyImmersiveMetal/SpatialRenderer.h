@@ -15,10 +15,12 @@ public:
 
 private:
     void makeResources();
-    void makeRenderPipelines(cp_layer_renderer_layout layout);
+    void makeRenderPipelines();
     MTLRenderPassDescriptor* createRenderPassDescriptor(cp_drawable_t drawable, size_t index);
+    MTLRenderPassDescriptor* createRenderPassDescriptor1(cp_drawable_t drawable, size_t index);
     PoseConstants poseConstantsForViewIndex(cp_drawable_t drawable, size_t index);
 
+    id<MTLTexture> _colorTexture, _depthTexture;
     id<MTLDevice> _device;
     id<MTLCommandQueue> _commandQueue;
     id<MTLRenderPipelineState> _environmentRenderPipelineState;
@@ -30,4 +32,5 @@ private:
     std::unique_ptr<SpatialEnvironmentMesh> _environmentMesh;
     CFTimeInterval _sceneTime;
     CFTimeInterval _lastRenderTime;
+    cp_layer_renderer_layout _layout;
 };

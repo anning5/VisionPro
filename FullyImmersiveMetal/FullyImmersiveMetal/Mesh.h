@@ -25,10 +25,10 @@ public:
     TexturedMesh(MDLMesh *mdlMesh, NSString *imageName, id<MTLDevice> device);
 
     void draw(id<MTLRenderCommandEncoder> renderCommandEncoder, PoseConstants poseConstants) override;
+    id<MTLTexture> _texture;
 
 protected:
     MTKMesh *_mesh;
-    id<MTLTexture> _texture;
 };
 
 class SpatialEnvironmentMesh: public TexturedMesh {

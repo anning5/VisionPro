@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4D39B20C2B61DD5600090465 /* EnvironmentShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 4D39B20B2B61DD5500090465 /* EnvironmentShaders.metal */; };
 		830175B22A44AC87008CAD8B /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830175B12A44AC87008CAD8B /* App.swift */; };
 		830175B42A44AC87008CAD8B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830175B32A44AC87008CAD8B /* ContentView.swift */; };
 		830175BA2A44AC87008CAD8B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 830175B92A44AC87008CAD8B /* Assets.xcassets */; };
@@ -17,7 +18,6 @@
 		830175CF2A44BE9B008CAD8B /* CompositorServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 830175CE2A44BE9B008CAD8B /* CompositorServices.framework */; };
 		8394CE862A44D36D005A8B04 /* SceneShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 8394CE852A44D36D005A8B04 /* SceneShaders.metal */; };
 		8394CE882A44DB1D005A8B04 /* studio.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 8394CE872A44DB1D005A8B04 /* studio.hdr */; };
-		8394CE8A2A44DD41005A8B04 /* EnvironmentShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 8394CE892A44DD41005A8B04 /* EnvironmentShaders.metal */; };
 		8394CE8C2A44E2D2005A8B04 /* ModelIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8394CE8B2A44E2D2005A8B04 /* ModelIO.framework */; };
 		8394CE8F2A44E3CA005A8B04 /* Mesh.mm in Sources */ = {isa = PBXBuildFile; fileRef = 8394CE8D2A44E3CA005A8B04 /* Mesh.mm */; };
 		8394CE932A44E67C005A8B04 /* SpatialRenderer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 8394CE912A44E67C005A8B04 /* SpatialRenderer.mm */; };
@@ -25,6 +25,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4D39B20B2B61DD5500090465 /* EnvironmentShaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = EnvironmentShaders.metal; sourceTree = "<group>"; };
 		830175AA2A44AC87008CAD8B /* FullyImmersiveMetal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FullyImmersiveMetal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		830175B12A44AC87008CAD8B /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		830175B32A44AC87008CAD8B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -38,7 +39,6 @@
 		830175CE2A44BE9B008CAD8B /* CompositorServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CompositorServices.framework; path = System/Library/Frameworks/CompositorServices.framework; sourceTree = SDKROOT; };
 		8394CE852A44D36D005A8B04 /* SceneShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = SceneShaders.metal; sourceTree = "<group>"; };
 		8394CE872A44DB1D005A8B04 /* studio.hdr */ = {isa = PBXFileReference; lastKnownFileType = file; path = studio.hdr; sourceTree = "<group>"; };
-		8394CE892A44DD41005A8B04 /* EnvironmentShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = EnvironmentShaders.metal; sourceTree = "<group>"; };
 		8394CE8B2A44E2D2005A8B04 /* ModelIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ModelIO.framework; path = System/Library/Frameworks/ModelIO.framework; sourceTree = SDKROOT; };
 		8394CE8D2A44E3CA005A8B04 /* Mesh.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Mesh.mm; sourceTree = "<group>"; };
 		8394CE8E2A44E3CA005A8B04 /* Mesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Mesh.h; sourceTree = "<group>"; };
@@ -94,7 +94,7 @@
 				830175B32A44AC87008CAD8B /* ContentView.swift */,
 				830175B12A44AC87008CAD8B /* App.swift */,
 				8394CE852A44D36D005A8B04 /* SceneShaders.metal */,
-				8394CE892A44DD41005A8B04 /* EnvironmentShaders.metal */,
+				4D39B20B2B61DD5500090465 /* EnvironmentShaders.metal */,
 				830175C32A44ACB4008CAD8B /* Bridging.h */,
 				8394CE942A44E843005A8B04 /* bluemarble.png */,
 				8394CE872A44DB1D005A8B04 /* studio.hdr */,
@@ -189,9 +189,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D39B20C2B61DD5600090465 /* EnvironmentShaders.metal in Sources */,
 				8394CE862A44D36D005A8B04 /* SceneShaders.metal in Sources */,
 				8394CE932A44E67C005A8B04 /* SpatialRenderer.mm in Sources */,
-				8394CE8A2A44DD41005A8B04 /* EnvironmentShaders.metal in Sources */,
 				830175B42A44AC87008CAD8B /* ContentView.swift in Sources */,
 				830175C62A44ACB4008CAD8B /* SpatialRenderingEngine.mm in Sources */,
 				830175B22A44AC87008CAD8B /* App.swift in Sources */,
@@ -327,9 +327,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = RHRJ88BAB5;
+				DEVELOPMENT_TEAM = S4Y2VND7LW;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to get pose estimates for immersive AR experiences";
@@ -339,7 +340,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.metalbyexample.FullyImmersiveMetal;
+				PRODUCT_BUNDLE_IDENTIFIER = com.metalbyexample.FullyImmersiveMetal1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -356,9 +357,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = RHRJ88BAB5;
+				DEVELOPMENT_TEAM = S4Y2VND7LW;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to get pose estimates for immersive AR experiences";
@@ -368,7 +370,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.metalbyexample.FullyImmersiveMetal;
+				PRODUCT_BUNDLE_IDENTIFIER = com.metalbyexample.FullyImmersiveMetal1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;

@@ -6,6 +6,16 @@ struct ContentView: View {
     
     @Environment(\.openImmersiveSpace) var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) var dismissImmersiveSpace
+    @Environment(\.dismissWindow) private var dismissWindow
+
+    func Open()
+    {
+        Task
+        {
+            await openImmersiveSpace(id: "ImmersiveSpace")
+            dismissWindow(id: "Menu")
+        }
+    }
     
     var body: some View {
         VStack {
@@ -21,6 +31,8 @@ struct ContentView: View {
                     await dismissImmersiveSpace()
                 }
             }
+        }.onAppear(){
+            Open()
         }
     }
 }

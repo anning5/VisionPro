@@ -12,6 +12,8 @@ struct VertexOut {
     float4 position [[position]];
     float3 modelNormal;
     float2 texCoords;
+    uint layer [[render_target_array_index]];
+    
 };
 
 struct PoseConstants {
@@ -26,6 +28,7 @@ struct EnvironmentConstants {
 
 [[vertex]]
 VertexOut vertex_environment(VertexIn in [[stage_in]],
+                             uint viewID [[amplification_id]],
                              constant PoseConstants &pose [[buffer(1)]],
                              constant EnvironmentConstants &environment [[buffer(2)]])
 {
