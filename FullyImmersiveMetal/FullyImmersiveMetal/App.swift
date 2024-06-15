@@ -8,11 +8,21 @@ struct MetalLayerConfiguration: CompositorLayerConfiguration {
         let supportsFoveation = capabilities.supportsFoveation
         let supportedLayouts = capabilities.supportedLayouts(options: supportsFoveation ? [.foveationEnabled] : [])
 
-        configuration.layout = supportedLayouts.contains(.layered) ? .layered : .dedicated
+        configuration.layout = supportedLayouts.contains(.layered) ? .layered : .shared
 
+//        configuration.layout = .shared
         //configuration.layout = .dedicated
-        //configuration.layout = .layered
-        configuration.isFoveationEnabled = supportsFoveation
+        configuration.layout = .layered
+        if(configuration.layout == .shared)
+        {
+            configuration.isFoveationEnabled = false
+        }
+        else
+        {
+            configuration.isFoveationEnabled = false
+        }
+        
+        
         configuration.colorFormat = .bgra8Unorm_srgb// .rgba16Float
         configuration.depthFormat = .depth32Float_stencil8
     }
@@ -46,6 +56,6 @@ struct FullyImmersiveMetalApp: App {
                   //  myEnginePushSpatialEvents(engine, &events, events.count)
                 }
             }
-        }.immersionStyle(selection: .constant(.full), in: .full, .mixed, .progressive)
+        }.immersionStyle(selection: .constant(.full), in: .full)
     }
 }

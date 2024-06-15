@@ -155,11 +155,31 @@ void SpatialRenderer::drawAndPresent(cp_frame_t frame, cp_drawable_t drawable) {
 	[renderCommandEncoder endEncoding];
 	
 
+	id<MTLTexture> colorTexture;
+	int colorTextureWidth;
+	int colorTextureHeight;
+    bool isSharedLayout = _layout == cp_layer_renderer_layout_shared;
+	if(isSharedLayout)
+	{
+		colorTexture = cp_drawable_get_color_texture(drawable, 0);
+		colorTextureWidth = colorTexture.width;
+		colorTextureHeight = colorTexture.height;
+	}
 
     for (int i = 0; i < (_layout == cp_layer_renderer_layout_layered ? 1 : cp_drawable_get_view_count(drawable)); ++i) {
+		
+
         MTLRenderPassDescriptor *renderPassDescriptor = createRenderPassDescriptor(drawable, i);
         id<MTLRenderCommandEncoder> renderCommandEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
         
+		if(isSharedLayout)
+		{
+			MTLViewport viewport[2]{
+				{.originX = 0, .originY = 0, .width = (double)colorTextureWidth / 2, .height = (double)colorTextureHeight, .znear = 0, .zfar = 1},
+				{.originX = (double)colorTextureWidth / 2, .originY = 0, .width = (double)colorTextureWidth / 2, .height = (double)colorTextureHeight, .znear = 0, .zfar = 1}
+			};
+			[renderCommandEncoder setViewport:viewport[i]];
+		}
         [renderCommandEncoder setCullMode:MTLCullModeBack];
         
         [renderCommandEncoder setFrontFacingWinding:MTLWindingCounterClockwise];
@@ -191,14 +211,15 @@ void SpatialRenderer::drawAndPresent(cp_frame_t frame, cp_drawable_t drawable) {
 MTLRenderPassDescriptor* SpatialRenderer::createRenderPassDescriptor(cp_drawable_t drawable, size_t index) {
     MTLRenderPassDescriptor *passDescriptor = [[MTLRenderPassDescriptor alloc] init];
 
-    passDescriptor.colorAttachments[0].texture = cp_drawable_get_color_texture(drawable, index);
+    bool isSharedLayout = _layout == cp_layer_renderer_layout_shared;
+    passDescriptor.colorAttachments[0].texture = cp_drawable_get_color_texture(drawable, isSharedLayout ? 0 : index);
     passDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
     passDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 1, 1);
-    passDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+    passDescriptor.colorAttachments[0].loadAction = isSharedLayout && index == 1 ? MTLLoadActionLoad : MTLLoadActionClear;
 
-    passDescriptor.depthAttachment.texture = cp_drawable_get_depth_texture(drawable, index);
+    passDescriptor.depthAttachment.texture = cp_drawable_get_depth_texture(drawable, isSharedLayout ? 0 : index);
     passDescriptor.depthAttachment.storeAction = MTLStoreActionStore;
-    passDescriptor.depthAttachment.loadAction = MTLLoadActionClear;
+    passDescriptor.depthAttachment.loadAction = isSharedLayout && index == 1 ? MTLLoadActionLoad : MTLLoadActionClear;
 
 	if(_layout == cp_layer_renderer_layout_layered)
 	{
