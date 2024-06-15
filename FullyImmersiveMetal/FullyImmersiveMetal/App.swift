@@ -6,9 +6,12 @@ struct MetalLayerConfiguration: CompositorLayerConfiguration {
                            configuration: inout LayerRenderer.Configuration)
     {
         let supportsFoveation = capabilities.supportsFoveation
-        //let supportedLayouts = capabilities.supportedLayouts(options: supportsFoveation ? [.foveationEnabled] : [])
+        let supportedLayouts = capabilities.supportedLayouts(options: supportsFoveation ? [.foveationEnabled] : [])
+
+        configuration.layout = supportedLayouts.contains(.layered) ? .layered : .dedicated
+
         //configuration.layout = .dedicated
-        configuration.layout = .layered
+        //configuration.layout = .layered
         configuration.isFoveationEnabled = supportsFoveation
         configuration.colorFormat = .bgra8Unorm_srgb// .rgba16Float
         configuration.depthFormat = .depth32Float_stencil8
