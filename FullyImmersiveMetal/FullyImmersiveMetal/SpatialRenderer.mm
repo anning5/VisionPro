@@ -112,6 +112,7 @@ void SpatialRenderer::drawAndPresent(cp_frame_t frame, cp_drawable_t drawable) {
     CFTimeInterval renderTime = CACurrentMediaTime();
     CFTimeInterval timestep = MIN(renderTime - _lastRenderTime, 1.0 / 60.0);
     _sceneTime += timestep;
+    _sceneTime = 0;
 
     float c = cos(_sceneTime * 0.5f);
     float s = sin(_sceneTime * 0.5f);
@@ -143,7 +144,7 @@ void SpatialRenderer::drawAndPresent(cp_frame_t frame, cp_drawable_t drawable) {
 
 	[renderCommandEncoder setCullMode:MTLCullModeBack];
 
-	PoseConstants poseConstants = poseConstantsForViewIndex(drawable, 0);
+	PoseConstants poseConstants = poseConstantsForViewIndex(drawable, (int)0);
 
 	[renderCommandEncoder setFrontFacingWinding:MTLWindingClockwise];
 	[renderCommandEncoder setDepthStencilState:_backgroundDepthStencilState];
@@ -161,19 +162,24 @@ void SpatialRenderer::drawAndPresent(cp_frame_t frame, cp_drawable_t drawable) {
         
         [renderCommandEncoder setCullMode:MTLCullModeBack];
         
-        PoseConstants poseConstants = poseConstantsForViewIndex(drawable, i);
-
-		if(_layout == cp_layer_renderer_layout_layered)
-		{
-			[renderCommandEncoder setVertexAmplificationCount:2 viewMappings:Mappings];
-		}
-
         [renderCommandEncoder setFrontFacingWinding:MTLWindingCounterClockwise];
         [renderCommandEncoder setDepthStencilState:_contentDepthStencilState];
         [renderCommandEncoder setRenderPipelineState:_contentRenderPipelineState];
 		_globeMesh->_texture = _colorTexture;
-        _globeMesh->draw(renderCommandEncoder, poseConstants);
-        
+
+		if(_layout == cp_layer_renderer_layout_layered)
+		{
+			[renderCommandEncoder setVertexAmplificationCount:2 viewMappings:Mappings];
+			PoseConstants poseConstants[2];
+			poseConstantsForViewIndex(drawable, poseConstants);
+			_globeMesh->draw(renderCommandEncoder, poseConstants);
+		}
+		else
+		{
+			PoseConstants poseConstants = poseConstantsForViewIndex(drawable, i);
+			_globeMesh->draw(renderCommandEncoder, poseConstants);
+		}
+
         [renderCommandEncoder endEncoding];
     }
 
@@ -194,7 +200,14 @@ MTLRenderPassDescriptor* SpatialRenderer::createRenderPassDescriptor(cp_drawable
     passDescriptor.depthAttachment.storeAction = MTLStoreActionStore;
     passDescriptor.depthAttachment.loadAction = MTLLoadActionClear;
 
-    passDescriptor.renderTargetArrayLength = 1;
+	if(_layout == cp_layer_renderer_layout_layered)
+	{
+		passDescriptor.renderTargetArrayLength = 2;
+	}
+	else
+	{
+		passDescriptor.renderTargetArrayLength = 1;
+	}
 
 	MTLRasterizationRateMapDescriptor *descriptor = [[MTLRasterizationRateMapDescriptor alloc] init];
 
@@ -222,7 +235,7 @@ MTLRenderPassDescriptor* SpatialRenderer::createRenderPassDescriptor(cp_drawable
 	//id<MTLRasterizationRateMap> rateMap = [_device newRasterizationRateMapWithDescriptor: descriptor];
 
     //passDescriptor.rasterizationRateMap = rateMap;
-    passDescriptor.rasterizationRateMap = cp_drawable_get_rasterization_rate_map(drawable, index);
+//    passDescriptor.rasterizationRateMap = cp_drawable_get_rasterization_rate_map(drawable, index);
 
     return passDescriptor;
 }
@@ -249,12 +262,36 @@ MTLRenderPassDescriptor* SpatialRenderer::createRenderPassDescriptor1(cp_drawabl
     return passDescriptor;
 }
 
+void SpatialRenderer::poseConstantsForViewIndex(cp_drawable_t drawable, PoseConstants* outPose) {
+
+    ar_device_anchor_t anchor = cp_drawable_get_device_anchor(drawable);
+
+    simd_float4x4 poseTransform = ar_anchor_get_origin_from_anchor_transform(anchor);
+    poseTransform = matrix_identity_float4x4;
+
+	for(int i = 0; i < 2; i++)
+	{
+		cp_view_t view = cp_drawable_get_view(drawable, i);
+		simd_float4 tangents = cp_view_get_tangents(view);
+		simd_float2 depth_range = cp_drawable_get_depth_range(drawable);
+		SPProjectiveTransform3D projectiveTransform = SPProjectiveTransform3DMakeFromTangents(tangents[0], tangents[1],
+				tangents[2], tangents[3],
+				depth_range[1], depth_range[0],
+				true);
+		outPose[i].projectionMatrix = matrix_float4x4_from_double4x4(projectiveTransform.matrix);
+
+		simd_float4x4 cameraMatrix = simd_mul(poseTransform, cp_view_get_transform(view));
+		outPose[i].viewMatrix = simd_inverse(cameraMatrix);
+	}
+}
+
 PoseConstants SpatialRenderer::poseConstantsForViewIndex(cp_drawable_t drawable, size_t index) {
     PoseConstants outPose;
 
     ar_device_anchor_t anchor = cp_drawable_get_device_anchor(drawable);
 
     simd_float4x4 poseTransform = ar_anchor_get_origin_from_anchor_transform(anchor);
+    poseTransform = matrix_identity_float4x4;
 
     cp_view_t view = cp_drawable_get_view(drawable, index);
     simd_float4 tangents = cp_view_get_tangents(view);

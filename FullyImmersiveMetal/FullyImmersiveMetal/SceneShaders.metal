@@ -12,7 +12,6 @@ struct VertexOut {
     float4 position [[position]];
     float3 viewNormal;
     float2 texCoords;
-    uint layer [[render_target_array_index]];
     float view;
 };
 
@@ -28,12 +27,14 @@ struct InstanceConstants {
 [[vertex]]
 VertexOut vertex_main(VertexIn in [[stage_in]],
                       uint viewID [[amplification_id]],
-                             constant PoseConstants &pose [[buffer(1)]],
+//                             constant PoseConstants &pose [[buffer(1)]],
+                             constant PoseConstants *pose [[buffer(1)]],
                              constant InstanceConstants &instance [[buffer(2)]])
 {
     VertexOut out;
-    out.position = pose.projectionMatrix * pose.viewMatrix * instance.modelMatrix * float4(in.position, 1.0f);
-    out.viewNormal = (pose.viewMatrix * instance.modelMatrix * float4(in.normal, 0.0f)).xyz;
+//    out.position = pose.projectionMatrix * pose.viewMatrix * instance.modelMatrix * float4(in.position, 1.0f);
+    out.position = pose[viewID].projectionMatrix * pose[viewID].viewMatrix * instance.modelMatrix * float4(in.position, 1.0f);
+    out.viewNormal = (pose[viewID].viewMatrix * instance.modelMatrix * float4(in.normal, 0.0f)).xyz;
     out.texCoords = in.texCoords;
     out.texCoords.x = 1.0f - out.texCoords.x; // Flip uvs horizontally to match Model I/O
     out.view = viewID;

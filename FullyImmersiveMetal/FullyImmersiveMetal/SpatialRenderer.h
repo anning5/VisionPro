@@ -19,6 +19,7 @@ private:
     MTLRenderPassDescriptor* createRenderPassDescriptor(cp_drawable_t drawable, size_t index);
     MTLRenderPassDescriptor* createRenderPassDescriptor1(cp_drawable_t drawable, size_t index);
     PoseConstants poseConstantsForViewIndex(cp_drawable_t drawable, size_t index);
+	void poseConstantsForViewIndex(cp_drawable_t drawable, PoseConstants* outPose);
 
     id<MTLTexture> _colorTexture, _depthTexture;
     id<MTLDevice> _device;
