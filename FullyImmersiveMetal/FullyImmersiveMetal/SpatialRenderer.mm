@@ -42,6 +42,7 @@ void SpatialRenderer::makeResources() {
                                               hemisphere:NO
                                                allocator:bufferAllocator];
     _globeMesh = std::make_unique<TexturedMesh>(sphereMesh, @"bluemarble.png", _device);
+//    _globeMesh1 = std::make_unique<TexturedMesh>(sphereMesh, @"bluemarble.png", _device);
 
     _environmentMesh = std::make_unique<SpatialEnvironmentMesh>(@"studio.hdr", 3.0, _device);
 
@@ -53,6 +54,7 @@ void SpatialRenderer::makeResources() {
 	desc.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
 	desc.arrayLength = 2;
 	_colorTexture = [_device newTextureWithDescriptor : desc];
+//	_colorTexture1 = [_device newTextureWithDescriptor : desc];
 
 	desc.pixelFormat = MTLPixelFormatDepth32Float_Stencil8;
 	desc.usage = MTLTextureUsageRenderTarget;
@@ -110,7 +112,18 @@ void SpatialRenderer::makeRenderPipelines() {
 
 void SpatialRenderer::drawAndPresent(cp_frame_t frame, cp_drawable_t drawable) {
     CFTimeInterval renderTime = CACurrentMediaTime();
-    CFTimeInterval timestep = MIN(renderTime - _lastRenderTime, 1.0 / 60.0);
+    CFTimeInterval timestep = renderTime - _lastRenderTime;
+	double delta = renderTime - _countFPSStart;
+	_fps++;
+	double fps1;
+	if(delta > 1)
+	{
+		fps1 = _fps;
+		_countFPSStart = renderTime;
+		_fps = 0;
+	}
+	_lastRenderTime = renderTime;
+//	NSLog(@"frameTime %f", timestep * 1000);
     _sceneTime += timestep;
     _sceneTime = 0;
 
@@ -121,6 +134,7 @@ void SpatialRenderer::drawAndPresent(cp_frame_t frame, cp_drawable_t drawable) {
                                                simd_make_float4(   s, 0.0f,     c, 0.0f),
                                                simd_make_float4(0.0f, 0.0f, -1.5f, 1.0f));
     _globeMesh->setModelMatrix(modelTransform);
+//    _globeMesh1->setModelMatrix(modelTransform);
 
     id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
 
@@ -144,34 +158,85 @@ void SpatialRenderer::drawAndPresent(cp_frame_t frame, cp_drawable_t drawable) {
 
 	[renderCommandEncoder setCullMode:MTLCullModeBack];
 
-	PoseConstants poseConstants = poseConstantsForViewIndex(drawable, (int)0);
-
 	[renderCommandEncoder setFrontFacingWinding:MTLWindingClockwise];
 	[renderCommandEncoder setDepthStencilState:_backgroundDepthStencilState];
 	[renderCommandEncoder setRenderPipelineState:_environmentRenderPipelineState];
 
-	_environmentMesh->draw(renderCommandEncoder, poseConstants);
+	_environmentMesh->draw(renderCommandEncoder, poseConstantsForViewIndex(drawable, (int)0));
 
 	[renderCommandEncoder endEncoding];
+
+
+//    renderPassDescriptor.colorAttachments[0].texture = _colorTexture1;
+//	renderCommandEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+//
+//	[renderCommandEncoder setCullMode:MTLCullModeBack];
+//
+//	[renderCommandEncoder setFrontFacingWinding:MTLWindingClockwise];
+//	[renderCommandEncoder setDepthStencilState:_backgroundDepthStencilState];
+//	[renderCommandEncoder setRenderPipelineState:_environmentRenderPipelineState];
+//
+//	_environmentMesh->draw(renderCommandEncoder, poseConstantsForViewIndex(drawable, (int)0));
+//
+//	[renderCommandEncoder endEncoding];
 	
 
-	id<MTLTexture> colorTexture;
+	_cpColorTextures[0] = cp_drawable_get_color_texture(drawable, 0);
+	_cpDepthTextures[0] = cp_drawable_get_depth_texture(drawable, 0);
+	if(_layout != cp_layer_renderer_layout_layered)
+	{
+		_cpColorTextures[1] = cp_drawable_get_color_texture(drawable, 1);
+		_cpDepthTextures[1] = cp_drawable_get_depth_texture(drawable, 1);
+	}
+
+
 	int colorTextureWidth;
 	int colorTextureHeight;
     bool isSharedLayout = _layout == cp_layer_renderer_layout_shared;
 	if(isSharedLayout)
 	{
-		colorTexture = cp_drawable_get_color_texture(drawable, 0);
-		colorTextureWidth = colorTexture.width;
-		colorTextureHeight = colorTexture.height;
+		colorTextureWidth = _cpColorTextures[0].width;
+		colorTextureHeight = _cpColorTextures[0].height;
 	}
 
-    for (int i = 0; i < (_layout == cp_layer_renderer_layout_layered ? 1 : cp_drawable_get_view_count(drawable)); ++i) {
-		
 
-        MTLRenderPassDescriptor *renderPassDescriptor = createRenderPassDescriptor(drawable, i);
-        id<MTLRenderCommandEncoder> renderCommandEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
-        
+	PoseConstants poseConstants[2];
+	poseConstants[0] = poseConstantsForViewIndex(drawable, 0);
+	poseConstants[1] = poseConstantsForViewIndex(drawable, 1);
+
+	PoseConstants poseConstants1[2];
+	poseConstants1[0] = poseConstantsForViewIndex(drawable, 0);
+	poseConstants1[1] = poseConstantsForViewIndex(drawable, 1);
+//    poseConstants1[0].viewMatrix.columns[3][3] += 0.0001f;
+//    poseConstants1[1].viewMatrix.columns[3][3] += 0.0001f;
+//    poseConstants1[0].projectionMatrix = matrix_identity_float4x4;
+//    poseConstants1[1].viewMatrix = matrix_identity_float4x4;
+//    poseConstants1[1].projectionMatrix = matrix_identity_float4x4;
+
+	if(_layout == cp_layer_renderer_layout_layered)
+	{
+		[renderCommandEncoder setVertexAmplificationCount:2 viewMappings:Mappings];
+	}
+
+	_globeMesh->_texture = _colorTexture;
+//	_globeMesh1->_texture = _colorTexture;
+	renderPassDescriptor = createRenderPassDescriptor(drawable, 0);
+	renderCommandEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+	[renderCommandEncoder setCullMode:MTLCullModeBack];
+
+	[renderCommandEncoder setFrontFacingWinding:MTLWindingCounterClockwise];
+	[renderCommandEncoder setDepthStencilState:_contentDepthStencilState];
+	[renderCommandEncoder setRenderPipelineState:_contentRenderPipelineState];
+
+	bool instancing = false;
+	if(_layout == cp_layer_renderer_layout_layered && !instancing)
+	{
+		[renderCommandEncoder setVertexAmplificationCount:2 viewMappings:Mappings];
+	}
+
+	renderTime = CACurrentMediaTime();
+	int loopCount = ((_layout == cp_layer_renderer_layout_layered || instancing) ? 1 : cp_drawable_get_view_count(drawable));
+    for (int i = 0; i < loopCount; ++i) {
 		if(isSharedLayout)
 		{
 			MTLViewport viewport[2]{
@@ -180,31 +245,54 @@ void SpatialRenderer::drawAndPresent(cp_frame_t frame, cp_drawable_t drawable) {
 			};
 			[renderCommandEncoder setViewport:viewport[i]];
 		}
-        [renderCommandEncoder setCullMode:MTLCullModeBack];
-        
-        [renderCommandEncoder setFrontFacingWinding:MTLWindingCounterClockwise];
-        [renderCommandEncoder setDepthStencilState:_contentDepthStencilState];
-        [renderCommandEncoder setRenderPipelineState:_contentRenderPipelineState];
-		_globeMesh->_texture = _colorTexture;
 
-		if(_layout == cp_layer_renderer_layout_layered)
-		{
-			[renderCommandEncoder setVertexAmplificationCount:2 viewMappings:Mappings];
-			PoseConstants poseConstants[2];
-			poseConstantsForViewIndex(drawable, poseConstants);
-			_globeMesh->draw(renderCommandEncoder, poseConstants);
-		}
-		else
-		{
-			PoseConstants poseConstants = poseConstantsForViewIndex(drawable, i);
-			_globeMesh->draw(renderCommandEncoder, poseConstants);
-		}
 
-        [renderCommandEncoder endEncoding];
+		for(int j = 0; j < 3000; j++)
+		{
+			float c = cos(_sceneTime * 0.5f);
+			float s = sin(_sceneTime * 0.5f);
+			simd_float4x4 modelTransform = simd_matrix(simd_make_float4(   c, 0.0f,    -s, 0.0f),
+					simd_make_float4(0.0f, 1.0f,  0.0f, 0.0f),
+					simd_make_float4(   s, 0.0f,     c, 0.0f),
+					simd_make_float4(0.0f, 0.0001f * j, -1.5f, 1.0f));
+			_globeMesh->setModelMatrix(modelTransform);
+//			_globeMesh1->setModelMatrix(modelTransform);
+
+			if(_layout == cp_layer_renderer_layout_layered || instancing)
+			{
+				_globeMesh->draw(renderCommandEncoder, poseConstants, 2, instancing);
+//				_globeMesh1->draw(renderCommandEncoder, poseConstants, 2, instancing);
+			}
+			else
+			{
+				_globeMesh->draw(renderCommandEncoder, poseConstants + i, 1);
+//				_globeMesh1->draw(renderCommandEncoder, poseConstants + i, 1);
+			}
+		}
     }
+	[renderCommandEncoder endEncoding];
+    CFTimeInterval timestep1 = CACurrentMediaTime() - renderTime;
+	[commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> cb)
+	{
+		CFTimeInterval start = cb.GPUStartTime;
+		CFTimeInterval end = cb.GPUEndTime;
+		CFTimeInterval gpuRuntimeDuration = end - start;
+		_totalGPUTime += gpuRuntimeDuration;
+		_totalCPUDrawTime += timestep1 * 1000;
+		if(delta > 1)
+		{
+			NSLog(@"gpuTime %f cpuDrawTime %f frameTime %f fps %f", _totalGPUTime / fps1 * 1000, timestep1 * 1000, delta / fps1 * 1000, fps1);
+//	NSLog(@"cpu draw %f", timestep1 * 1000);
+			_totalGPUTime = 0;
+			_totalCPUDrawTime = 0;
+		}
+	}
+	];
+    [commandBuffer commit];
 
+
+    commandBuffer = [_commandQueue commandBuffer];
     cp_drawable_encode_present(drawable, commandBuffer);
-
     [commandBuffer commit];
 }
 
@@ -212,12 +300,14 @@ MTLRenderPassDescriptor* SpatialRenderer::createRenderPassDescriptor(cp_drawable
     MTLRenderPassDescriptor *passDescriptor = [[MTLRenderPassDescriptor alloc] init];
 
     bool isSharedLayout = _layout == cp_layer_renderer_layout_shared;
-    passDescriptor.colorAttachments[0].texture = cp_drawable_get_color_texture(drawable, isSharedLayout ? 0 : index);
+//    passDescriptor.colorAttachments[0].texture = cp_drawable_get_color_texture(drawable, isSharedLayout ? 0 : index);
+    passDescriptor.colorAttachments[0].texture = _cpColorTextures[isSharedLayout ? 0 : index];
     passDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
     passDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 1, 1);
     passDescriptor.colorAttachments[0].loadAction = isSharedLayout && index == 1 ? MTLLoadActionLoad : MTLLoadActionClear;
 
-    passDescriptor.depthAttachment.texture = cp_drawable_get_depth_texture(drawable, isSharedLayout ? 0 : index);
+//    passDescriptor.depthAttachment.texture = cp_drawable_get_depth_texture(drawable, isSharedLayout ? 0 : index);
+    passDescriptor.depthAttachment.texture = _cpDepthTextures[isSharedLayout ? 0 : index];
     passDescriptor.depthAttachment.storeAction = MTLStoreActionStore;
     passDescriptor.depthAttachment.loadAction = isSharedLayout && index == 1 ? MTLLoadActionLoad : MTLLoadActionClear;
 
@@ -281,29 +371,6 @@ MTLRenderPassDescriptor* SpatialRenderer::createRenderPassDescriptor1(cp_drawabl
     //passDescriptor.rasterizationRateMap = cp_drawable_get_rasterization_rate_map(drawable, index);
 
     return passDescriptor;
-}
-
-void SpatialRenderer::poseConstantsForViewIndex(cp_drawable_t drawable, PoseConstants* outPose) {
-
-    ar_device_anchor_t anchor = cp_drawable_get_device_anchor(drawable);
-
-    simd_float4x4 poseTransform = ar_anchor_get_origin_from_anchor_transform(anchor);
-    poseTransform = matrix_identity_float4x4;
-
-	for(int i = 0; i < 2; i++)
-	{
-		cp_view_t view = cp_drawable_get_view(drawable, i);
-		simd_float4 tangents = cp_view_get_tangents(view);
-		simd_float2 depth_range = cp_drawable_get_depth_range(drawable);
-		SPProjectiveTransform3D projectiveTransform = SPProjectiveTransform3DMakeFromTangents(tangents[0], tangents[1],
-				tangents[2], tangents[3],
-				depth_range[1], depth_range[0],
-				true);
-		outPose[i].projectionMatrix = matrix_float4x4_from_double4x4(projectiveTransform.matrix);
-
-		simd_float4x4 cameraMatrix = simd_mul(poseTransform, cp_view_get_transform(view));
-		outPose[i].viewMatrix = simd_inverse(cameraMatrix);
-	}
 }
 
 PoseConstants SpatialRenderer::poseConstantsForViewIndex(cp_drawable_t drawable, size_t index) {

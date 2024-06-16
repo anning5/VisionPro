@@ -12,7 +12,9 @@ struct VertexOut {
     float4 position [[position]];
     float3 viewNormal;
     float2 texCoords;
-    float view;
+    uint view
+//		[[render_target_array_index]]
+		;
 };
 
 struct PoseConstants {
@@ -27,17 +29,24 @@ struct InstanceConstants {
 [[vertex]]
 VertexOut vertex_main(VertexIn in [[stage_in]],
                       uint viewID [[amplification_id]],
-//                             constant PoseConstants &pose [[buffer(1)]],
+                      uint instanceID [[instance_id]],
                              constant PoseConstants *pose [[buffer(1)]],
                              constant InstanceConstants &instance [[buffer(2)]])
 {
     VertexOut out;
-//    out.position = pose.projectionMatrix * pose.viewMatrix * instance.modelMatrix * float4(in.position, 1.0f);
-    out.position = pose[viewID].projectionMatrix * pose[viewID].viewMatrix * instance.modelMatrix * float4(in.position, 1.0f);
-    out.viewNormal = (pose[viewID].viewMatrix * instance.modelMatrix * float4(in.normal, 0.0f)).xyz;
+
+//    out.position = pose[viewID].projectionMatrix * pose[viewID].viewMatrix * instance.modelMatrix * float4(in.position, 1.0f);
+//    out.viewNormal = (pose[viewID].viewMatrix * instance.modelMatrix * float4(in.normal, 0.0f)).xyz;
+
+    out.position = pose[0].projectionMatrix * pose[0].viewMatrix * instance.modelMatrix * float4(in.position, 1.0f);
+    out.viewNormal = (pose[0].viewMatrix * instance.modelMatrix * float4(in.normal, 0.0f)).xyz;
+
+//    out.position = pose[instanceID].projectionMatrix * pose[instanceID].viewMatrix * instance.modelMatrix * float4(in.position, 1.0f);
+//    out.viewNormal = (pose[instanceID].viewMatrix * instance.modelMatrix * float4(in.normal, 0.0f)).xyz;
+
     out.texCoords = in.texCoords;
     out.texCoords.x = 1.0f - out.texCoords.x; // Flip uvs horizontally to match Model I/O
-    out.view = viewID;
+    out.view = instanceID;
     return out;
 }
 
@@ -51,8 +60,6 @@ float4 fragment_main(VertexOut in [[stage_in]],
                                          mip_filter::none,
                                          address::repeat);
 
-//    return float4(in.view, 1, 0, 1);
-    float3 N = normalize(in.viewNormal);
     float4 color = texture.sample(environmentSampler, in.texCoords, 0);
     return color;
 }

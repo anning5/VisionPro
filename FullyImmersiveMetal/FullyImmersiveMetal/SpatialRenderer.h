@@ -19,9 +19,10 @@ private:
     MTLRenderPassDescriptor* createRenderPassDescriptor(cp_drawable_t drawable, size_t index);
     MTLRenderPassDescriptor* createRenderPassDescriptor1(cp_drawable_t drawable, size_t index);
     PoseConstants poseConstantsForViewIndex(cp_drawable_t drawable, size_t index);
-	void poseConstantsForViewIndex(cp_drawable_t drawable, PoseConstants* outPose);
 
-    id<MTLTexture> _colorTexture, _depthTexture;
+    id<MTLTexture> _colorTexture, _colorTexture1, _depthTexture;
+    id<MTLTexture> _cpColorTextures[2];
+    id<MTLTexture> _cpDepthTextures[2];
     id<MTLDevice> _device;
     id<MTLCommandQueue> _commandQueue;
     id<MTLRenderPipelineState> _environmentRenderPipelineState;
@@ -30,8 +31,13 @@ private:
     id<MTLDepthStencilState> _backgroundDepthStencilState;
     cp_layer_renderer_t _layerRenderer;
     std::unique_ptr<TexturedMesh> _globeMesh;
+    std::unique_ptr<TexturedMesh> _globeMesh1;
     std::unique_ptr<SpatialEnvironmentMesh> _environmentMesh;
     CFTimeInterval _sceneTime;
     CFTimeInterval _lastRenderTime;
     cp_layer_renderer_layout _layout;
+	double _countFPSStart = 0;
+	double _fps = 0;
+	double _totalGPUTime = 0;
+	double _totalCPUDrawTime = 0;
 };

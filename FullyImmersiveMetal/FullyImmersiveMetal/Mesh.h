@@ -9,7 +9,6 @@
 class Mesh {
 public:
     virtual MTLVertexDescriptor *vertexDescriptor() const;
-    virtual void draw(id<MTLRenderCommandEncoder> renderCommandEncoder, PoseConstants poseConstants) = 0;
 
     simd_float4x4 modelMatrix() const { return _modelMatrix; }
 
@@ -24,8 +23,7 @@ public:
     TexturedMesh();
     TexturedMesh(MDLMesh *mdlMesh, NSString *imageName, id<MTLDevice> device);
 
-    void draw(id<MTLRenderCommandEncoder> renderCommandEncoder, PoseConstants poseConstants) override;
-    void draw(id<MTLRenderCommandEncoder> renderCommandEncoder, const PoseConstants* poseConstants);
+	void draw(id<MTLRenderCommandEncoder> renderCommandEncoder, const PoseConstants* poseConstants, int count, bool instancing = false);
     id<MTLTexture> _texture;
 
 protected:
@@ -35,7 +33,7 @@ protected:
 class SpatialEnvironmentMesh: public TexturedMesh {
 public:
     SpatialEnvironmentMesh(NSString *imageName, CGFloat radius, id<MTLDevice> device);
-    void draw(id<MTLRenderCommandEncoder> renderCommandEncoder, PoseConstants poseConstants) override;
+    void draw(id<MTLRenderCommandEncoder> renderCommandEncoder, PoseConstants poseConstants);
 
 private:
     simd_float4x4 _environmentRotation;

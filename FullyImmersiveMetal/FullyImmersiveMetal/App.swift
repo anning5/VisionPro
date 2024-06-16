@@ -10,9 +10,9 @@ struct MetalLayerConfiguration: CompositorLayerConfiguration {
 
         configuration.layout = supportedLayouts.contains(.layered) ? .layered : .shared
 
-//        configuration.layout = .shared
-        //configuration.layout = .dedicated
-        configuration.layout = .layered
+        configuration.layout = .shared
+        //configuration.layout = .dedicated // not supporting it for now
+//        configuration.layout = .layered
         if(configuration.layout == .shared)
         {
             configuration.isFoveationEnabled = false

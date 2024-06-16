@@ -61,7 +61,7 @@ TexturedMesh::TexturedMesh(MDLMesh *mdlMesh, NSString *imageName, id<MTLDevice> 
     _mesh = [[MTKMesh alloc] initWithMesh:mdlMesh device:device error:&error];
 }
 
-void TexturedMesh::draw(id<MTLRenderCommandEncoder> renderCommandEncoder, const PoseConstants* poseConstants) {
+void TexturedMesh::draw(id<MTLRenderCommandEncoder> renderCommandEncoder, const PoseConstants* poseConstants, int count, bool instancing) {
     InstanceConstants instanceConstants;
     instanceConstants.modelMatrix  = modelMatrix();
 
@@ -70,33 +70,19 @@ void TexturedMesh::draw(id<MTLRenderCommandEncoder> renderCommandEncoder, const 
     [renderCommandEncoder setVertexBuffer:vertexBuffer.buffer
                                    offset:vertexBuffer.offset
                                   atIndex:0];
-    [renderCommandEncoder setVertexBytes:poseConstants length:(sizeof(PoseConstants) * 2) atIndex:1];
+    [renderCommandEncoder setVertexBytes:poseConstants length:(sizeof(PoseConstants) * count) atIndex:1];
     [renderCommandEncoder setVertexBytes:&instanceConstants length:sizeof(instanceConstants) atIndex:2];
     [renderCommandEncoder setFragmentTexture:_texture atIndex:0];
-    [renderCommandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
-                                     indexCount:submesh.indexCount
-                                      indexType:submesh.indexType
-                                    indexBuffer:submesh.indexBuffer.buffer
-                              indexBufferOffset:submesh.indexBuffer.offset];
-}
 
-void TexturedMesh::draw(id<MTLRenderCommandEncoder> renderCommandEncoder, PoseConstants poseConstants) {
-    InstanceConstants instanceConstants;
-    instanceConstants.modelMatrix  = modelMatrix();
-
-    MTKSubmesh *submesh = _mesh.submeshes.firstObject;
-    MTKMeshBuffer *vertexBuffer = _mesh.vertexBuffers.firstObject;
-    [renderCommandEncoder setVertexBuffer:vertexBuffer.buffer
-                                   offset:vertexBuffer.offset
-                                  atIndex:0];
-    [renderCommandEncoder setVertexBytes:&poseConstants length:sizeof(poseConstants) atIndex:1];
-    [renderCommandEncoder setVertexBytes:&instanceConstants length:sizeof(instanceConstants) atIndex:2];
-    [renderCommandEncoder setFragmentTexture:_texture atIndex:0];
-    [renderCommandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
-                                     indexCount:submesh.indexCount
-                                      indexType:submesh.indexType
-                                    indexBuffer:submesh.indexBuffer.buffer
-                              indexBufferOffset:submesh.indexBuffer.offset];
+	{
+		[renderCommandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
+			indexCount:submesh.indexCount
+				indexType:submesh.indexType
+				indexBuffer:submesh.indexBuffer.buffer
+				indexBufferOffset:submesh.indexBuffer.offset
+				instanceCount:instancing ? 2 : 1
+		];
+	}
 }
 
 SpatialEnvironmentMesh::SpatialEnvironmentMesh(NSString *imageName, CGFloat radius, id<MTLDevice> device) :
